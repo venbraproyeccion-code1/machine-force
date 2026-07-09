@@ -12,6 +12,11 @@ curl -fsSL "https://raw.githubusercontent.com/venbraproyeccion-code1/machine-for
 
 PUBLIC_IP=$(curl -s ifconfig.me)
 
+# El archivo .env NUNCA se versiona en git — vive solo en la VM y
+# guarda secretos como ANTHROPIC_API_KEY. Se crea vacio si no existe
+# para que el "env_file" de abajo no falle en la primera instalacion.
+touch /opt/n8n/.env
+
 cat > /opt/n8n/docker-compose.yml <<DCEOF
 version: '3.8'
 services:
@@ -38,7 +43,9 @@ services:
     volumes:
       - /opt/venbrax:/venbrax
     working_dir: /venbrax
-    command: python3 content_engine_server.py
+    command: sh -c "pip install --quiet anthropic 2>/dev/null; python3 content_engine_server.py"
+    env_file:
+      - /opt/n8n/.env
     environment:
       - PORT=8001
 
