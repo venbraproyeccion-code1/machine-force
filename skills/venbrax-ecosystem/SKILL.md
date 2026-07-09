@@ -10,7 +10,8 @@ VenBraTech is building a fully autonomous AI-powered ecosystem. The goal is zero
 
 ```
 INFRASTRUCTURE
-├── Google Cloud e2-micro (us-central1) → n8n [CONFIGURANDO — PRIMARY]
+├── Google Cloud e2-micro (us-central1-f) → n8n [VM RUNNING — PRIMARY]
+│   └── venbratech-n8n → IP externa: 162.222.183.89 → n8n: http://162.222.183.89:5678
 ├── Oracle A1 Flex → retrying every 2h (background, low priority)
 ├── Render.com → forensic-api-v5 [LIVE]
 └── venbratech.com → main domain
@@ -54,8 +55,8 @@ CONTENT ENGINE (5 insights × 5 platforms × 3x/day)
 
 | Component | Status | Next Action |
 |---|---|---|
-| Google Cloud VM | ⏳ User setting up | Complete Redes + startup script in Avanzado |
-| n8n | ⏳ Pending VM | Auto-installs via startup script |
+| Google Cloud VM | ✅ RUNNING — venbratech-n8n, us-central1-f, IP 162.222.183.89 | Firewall allow-n8n (5678) created |
+| n8n | ⏳ Installing via startup script | Verify http://162.222.183.89:5678 |
 | Content Engine | ✅ Ready in machine-force/venbrax/ | Deploy to VM after n8n up |
 | Oracle A1 Flex | 🔄 Retry every 2h | Low priority — GCP is primary |
 | forensic-api-v5 | ✅ Live on Render.com | No action needed |
@@ -85,7 +86,8 @@ When the ecosystem is blocked: identify the single bottleneck. Current: VM creat
 When asked for links: always provide direct links:
 - Google Cloud Console: https://console.cloud.google.com/compute/instances?project=venbrax
 - GitHub repos: https://github.com/venbraproyeccion-code1
-- n8n (after VM): http://[VM_IP]:5678
+- n8n: http://162.222.183.89:5678 (admin / VenBraTech2025!)
+- Firewall rules: https://console.cloud.google.com/networking/firewalls/list?project=venbrax
 
 ## Credentials Map
 
