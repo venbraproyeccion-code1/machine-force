@@ -4,11 +4,16 @@
 # depender del nodo Execute Command que viene desactivado por seguridad).
 set -e
 
+# raw.githubusercontent.com cachea por punto de presencia geografico —
+# distintos clientes pueden ver versiones distintas del mismo archivo
+# hasta 5 min. Se clona el repo con git (nunca cachea) para eliminar
+# ese riesgo de raiz.
+rm -rf /tmp/mf-sync
+git clone --depth 1 --quiet https://github.com/venbraproyeccion-code1/machine-force.git /tmp/mf-sync
+
 mkdir -p /opt/venbrax
-curl -fsSL "https://raw.githubusercontent.com/venbraproyeccion-code1/machine-force/main/venbrax/content_engine.py" \
-     -o /opt/venbrax/content_engine.py
-curl -fsSL "https://raw.githubusercontent.com/venbraproyeccion-code1/machine-force/main/venbrax/content_engine_server.py" \
-     -o /opt/venbrax/content_engine_server.py
+cp /tmp/mf-sync/venbrax/content_engine.py /opt/venbrax/content_engine.py
+cp /tmp/mf-sync/venbrax/content_engine_server.py /opt/venbrax/content_engine_server.py
 
 PUBLIC_IP=$(curl -s ifconfig.me)
 
