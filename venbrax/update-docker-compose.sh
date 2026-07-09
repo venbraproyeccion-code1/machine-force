@@ -49,6 +49,9 @@ services:
     environment:
       - PORT=8001
       - PYTHONUNBUFFERED=1
+      - PYTHONIOENCODING=UTF-8
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
 
 volumes:
   n8n_data:
