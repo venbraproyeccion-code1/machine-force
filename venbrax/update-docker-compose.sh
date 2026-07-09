@@ -43,11 +43,12 @@ services:
     volumes:
       - /opt/venbrax:/venbrax
     working_dir: /venbrax
-    command: sh -c "pip install --quiet anthropic 2>/dev/null; python3 content_engine_server.py"
+    command: sh -c "pip install --quiet anthropic; python3 content_engine_server.py"
     env_file:
       - /opt/n8n/.env
     environment:
       - PORT=8001
+      - PYTHONUNBUFFERED=1
 
 volumes:
   n8n_data:
