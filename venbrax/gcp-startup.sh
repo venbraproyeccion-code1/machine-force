@@ -11,7 +11,7 @@ echo "[$(date -u)] VenBraTech n8n setup iniciando..."
 
 # System update + deps
 apt-get update -y
-apt-get install -y docker.io curl ufw nginx certbot python3-certbot-nginx
+apt-get install -y docker.io curl ufw git python3-pip
 
 # Docker service
 systemctl enable docker
@@ -57,6 +57,12 @@ DCEOF
 
 cd /opt/n8n
 docker-compose up -d
+
+# ── VenBraX Content Engine ────────────────────────────────────────────────────
+mkdir -p /opt/venbrax
+curl -fsSL "https://raw.githubusercontent.com/venbraproyeccion-code1/machine-force/main/venbrax/content_engine.py" \
+     -o /opt/venbrax/content_engine.py
+pip3 install --quiet anthropic requests 2>/dev/null || pip3 install --break-system-packages --quiet anthropic requests
 
 # Wait for n8n to start
 sleep 15

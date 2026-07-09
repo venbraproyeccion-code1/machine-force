@@ -188,11 +188,11 @@ def main():
     parser.add_argument("--platform", choices=list(PLATFORMS.keys()), help="Plataforma específica")
     parser.add_argument("--preview", action="store_true", help="Solo muestra, no publica")
     parser.add_argument("--use-claude", action="store_true", help="Usa Claude API para mejorar")
+    parser.add_argument("--json", action="store_true", help="Salida JSON pura (para n8n)")
     args = parser.parse_args()
 
     insight = get_insight_of_day()
     ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-    print(f"[{ts}] Insight del día: {insight['title']}")
 
     platforms = [args.platform] if args.platform else list(PLATFORMS.keys())
     results = {}
@@ -202,8 +202,20 @@ def main():
             content = generate_with_claude(insight, platform)
         else:
             content = format_for_platform(insight, platform)
-
         results[platform] = content
+
+    if args.json:
+        # Salida JSON pura por stdout — n8n la parsea con JSON.parse()
+        print(json.dumps({
+            "timestamp": ts,
+            "insight_id": insight["id"],
+            "insight_title": insight["title"],
+            "posts": results
+        }, ensure_ascii=False))
+        return results
+
+    print(f"[{ts}] Insight del día: {insight['title']}")
+    for platform, content in results.items():
         print(f"\n{'='*60}")
         print(f"PLATAFORMA: {platform.upper()}")
         print(f"CHARS: {len(content)}/{PLATFORMS[platform]['max_chars']}")
