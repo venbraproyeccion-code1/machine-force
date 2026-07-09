@@ -12,24 +12,31 @@
         }
       },
       "id": "schedule",
-      "name": "Schedule 3x/día",
+      "name": "Horario 3 veces al día",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [240, 300]
     },
     {
       "parameters": {
-        "command": "cd /opt/venbrax && python3 content_engine.py --json --use-claude"
+        "url": "http://content-engine:8001/generate",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {"name": "use_claude", "value": "true"}
+          ]
+        },
+        "options": {}
       },
       "id": "generate",
-      "name": "Genera Contenido",
-      "type": "n8n-nodes-base.executeCommand",
-      "typeVersion": 1,
+      "name": "Genera Contenido (API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [460, 300]
     },
     {
       "parameters": {
-        "jsCode": "// Parsea la salida JSON del content engine y crea 1 item por plataforma.\nconst raw = $input.first().json.stdout || '{}';\nconst data = JSON.parse(raw);\n\nconst emojis = { linkedin: '💼', twitter: '🐦', instagram: '📸', tiktok: '🎬', threads: '🧵' };\n\nreturn Object.entries(data.posts).map(([platform, content]) => ({\n  json: {\n    platform,\n    emoji: emojis[platform] || '📤',\n    content,\n    chars: content.length,\n    insight: data.insight_title,\n    timestamp: data.timestamp\n  }\n}));"
+        "jsCode": "// La API ya devuelve JSON parseado — sin parseo de texto frágil.\nconst data = $input.first().json;\nconst emojis = { linkedin: '💼', twitter: '🐦', instagram: '📸', tiktok: '🎬', threads: '🧵' };\n\nreturn Object.entries(data.posts).map(([platform, content]) => ({\n  json: {\n    platform,\n    emoji: emojis[platform] || '📤',\n    content,\n    chars: content.length,\n    insight: data.insight_title\n  }\n}));"
       },
       "id": "split",
       "name": "1 Item por Plataforma",
@@ -40,7 +47,7 @@
     {
       "parameters": {
         "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
-        "text": "={{ $json.emoji }} <b>{{ $json.platform.toUpperCase() }}</b> — {{ $json.insight }}\n\n{{ $json.content }}\n\n📏 {{ $json.chars }} chars | {{ $json.timestamp }}",
+        "text": "={{ $json.emoji }} <b>{{ $json.platform.toUpperCase() }}</b> — {{ $json.insight }}\n\n{{ $json.content }}\n\n📏 {{ $json.chars }} chars",
         "additionalFields": {
           "parse_mode": "HTML"
         }
@@ -59,10 +66,10 @@
     }
   ],
   "connections": {
-    "Schedule 3x/día": {
-      "main": [[{"node": "Genera Contenido", "type": "main", "index": 0}]]
+    "Horario 3 veces al día": {
+      "main": [[{"node": "Genera Contenido (API)", "type": "main", "index": 0}]]
     },
-    "Genera Contenido": {
+    "Genera Contenido (API)": {
       "main": [[{"node": "1 Item por Plataforma", "type": "main", "index": 0}]]
     },
     "1 Item por Plataforma": {
@@ -73,5 +80,5 @@
     "timezone": "America/Caracas",
     "executionOrder": "v1"
   },
-  "_venbrax_notes": "v2 — CERO nodos fantasmas: los 4 nodos disparan y producen en CADA ejecución. Los 5 posts llegan por Telegram listos para publicar. Cuando existan credenciales de LinkedIn/Twitter/Instagram/TikTok, se importa content-engine-social-v2.json (fase 2) que publica directo. Requisitos en la VM: content_engine.py en /opt/venbrax/, TELEGRAM_CHAT_ID como variable de entorno de n8n, credencial Telegram Bot configurada."
+  "_venbrax_notes": "v3 — usa HTTP Request en vez de Execute Command (nodo desactivado por seguridad en n8n moderno). El content_engine_server.py corre como servicio Docker separado 'content-engine' en la misma red interna que n8n. 4 nodos, todos productivos. Requiere: docker-compose.yml actualizado con el servicio content-engine (ver update-docker-compose.sh), credencial Telegram Bot configurada, TELEGRAM_CHAT_ID como variable de n8n."
 }
