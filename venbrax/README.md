@@ -69,6 +69,43 @@ GET /visual?insight_id=ai-cost-inflation → tarjeta de un insight específico
 GET /visual?handle=@tucuenta             → cambia el handle mostrado
 ```
 
+## Social Publisher (sin OAuth redirect)
+
+Publica directo vía API con tokens de larga duración — elimina el problema
+de "localhost / redirect URI" porque no usa el flujo OAuth de n8n.
+
+```bash
+python social_publisher.py --all --dry-run          # prueba sin publicar
+python social_publisher.py --platform facebook      # publica insight del día
+python social_publisher.py --platform instagram --image-url https://...
+```
+
+### Cómo generar cada token (una sola vez, ~20 min)
+
+**Facebook Page + Instagram** (misma app de Meta, App Dashboard → caso de uso Business):
+1. [Graph API Explorer](https://developers.facebook.com/tools/explorer/) → selecciona tu app
+   → User Token con permisos `pages_manage_posts`, `pages_read_engagement`,
+   `instagram_basic`, `instagram_content_publish`.
+2. Canjear por token de larga duración:
+   `GET /oauth/access_token?grant_type=fb_exchange_token&client_id=APP_ID&client_secret=APP_SECRET&fb_exchange_token=TOKEN_CORTO`
+3. Con ese token: `GET /me/accounts` → te da el **FB_PAGE_ID** y el
+   **FB_PAGE_ACCESS_TOKEN** (los page tokens derivados de un user token de
+   larga duración no expiran).
+4. **IG_USER_ID**: `GET /{FB_PAGE_ID}?fields=instagram_business_account`
+   (requiere IG Professional/Creator vinculada a la Page).
+5. No requiere App Review mientras publiques en tus propias cuentas con rol
+   de admin en la app (modo desarrollo).
+
+**LinkedIn** ([developer portal](https://developer.linkedin.com/)):
+1. App → Products → habilitar "Share on LinkedIn" y "Sign In with LinkedIn
+   using OpenID Connect".
+2. Auth → usar el **Token Generator** del portal (no requiere redirect propio)
+   → scope `w_member_social` + `openid profile`.
+3. **LINKEDIN_AUTHOR_URN**: `GET https://api.linkedin.com/v2/userinfo` →
+   `urn:li:person:{sub}`.
+
+Tokens van en `/opt/n8n/.env` (VM) o en las env vars de Render — nunca en git.
+
 ## n8n Workflow
 
 1. Abrir n8n: `http://IP_PUBLICA:5678`
