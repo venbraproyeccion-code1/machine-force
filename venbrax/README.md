@@ -8,6 +8,7 @@ Repositorio de scripts de infraestructura y content engine para el ecosistema Ve
 venbrax/
 ├── gcp-startup.sh              → Script de inicio para Google Cloud e2-micro
 ├── content_engine.py           → Motor de contenido (5 plataformas, 3x/día)
+├── visual_generator.py         → Tarjetas IG 1080x1350 estilo "terminal hacker"
 ├── n8n-workflows/
 │   └── content-engine-workflow.json  → Workflow n8n para contenido automático
 └── README.md
@@ -38,6 +39,34 @@ python content_engine.py --platform linkedin
 
 # Preview sin guardar
 python content_engine.py --preview
+
+# Generar además la tarjeta visual IG (HTML 1080x1350)
+python content_engine.py --visual
+```
+
+## Visual Generator (tarjetas Instagram)
+
+Genera tarjetas 1080x1350 con estética "terminal hacker" (Matrix rain, comando
+fake, headline con acento rojo, caja amarilla de "culpable inesperado", fuente
+citada). Fórmula basada en formatos de alto save-ratio del nicho tech en español.
+
+```bash
+# Insight del día
+python visual_generator.py
+
+# Insight específico
+python visual_generator.py --insight-id ai-cost-inflation
+
+# Render a PNG (requiere Chromium en la máquina)
+chromium --headless --screenshot=card.png --window-size=1080,1350 card.html
+```
+
+Vía HTTP (para n8n):
+
+```
+GET /visual                              → tarjeta del insight del día
+GET /visual?insight_id=ai-cost-inflation → tarjeta de un insight específico
+GET /visual?handle=@tucuenta             → cambia el handle mostrado
 ```
 
 ## n8n Workflow
