@@ -10,6 +10,8 @@ apt-get install -y --no-install-recommends python3-requests
 mkdir -p /opt/venbrax
 curl -fsSL "https://raw.githubusercontent.com/venbraproyeccion-code1/machine-force/main/venbrax/content_engine.py" \
      -o /opt/venbrax/content_engine.py
+curl -fsSL "https://raw.githubusercontent.com/venbraproyeccion-code1/machine-force/main/venbrax/visual_generator.py" \
+     -o /opt/venbrax/visual_generator.py
 
 # anthropic SDK es opcional (el engine funciona con templates sin el);
 # instalarlo solo si hay memoria disponible

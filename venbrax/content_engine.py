@@ -22,7 +22,8 @@ PLATFORMS = {
     "threads":   {"max_chars": 500,  "hashtags": 5,  "style": "conversational"},
 }
 
-# 5 insights técnicos rotando por semana — actualizar mensualmente
+# Insights técnicos rotando por día — actualizar mensualmente.
+# Los campos visual_* y fuente/punch alimentan visual_generator.py (tarjeta IG).
 INSIGHTS_POOL = [
     {
         "id": "ai-agent-loops",
@@ -59,6 +60,36 @@ INSIGHTS_POOL = [
         "insight": "Para < 100k vectores: pgvector + Supabase (gratis). 100k-10M: Weaviate cloud o self-hosted. 10M+: Pinecone enterprise. La clave es tu volumen de vectores, no los features.",
         "cta": "¿Cuántos vectores manejas en producción?",
         "niches": ["Vector DB", "AI Engineering", "Database"],
+    },
+    {
+        "id": "ai-cost-inflation",
+        "title": "Tu próxima computadora costará más — y la culpa es de la IA",
+        "hook_stat": "Los precios de DRAM subieron 90-95% en un solo trimestre (Q1 2026)",
+        "why": "los data centers de IA están absorbiendo la producción mundial de memoria y la RAM es ~35% del costo de una PC",
+        "insight": "TrendForce proyecta que el mercado de memoria llegará a $1.28 billones (trillion USD) en 2027 impulsado por Agentic AI. Los fabricantes ya trasladan el costo: laptops y PCs suben de precio todo 2026. El hardware se encarece — pero tu factura de IA no tiene que hacerlo: prompt caching, modelos correctos por tarea y self-hosting recortan 60-90% del gasto.",
+        "cta": "El hardware sube. Tu stack de IA no tiene que costarte más — audita tu gasto con VenBraX",
+        "niches": ["AI Economics", "Cost Optimization", "Hardware"],
+        "visual_label": "LA IA ENCARECE TU HARDWARE",
+        "visual_headline": "Tu próxima **computadora** costará más.",
+        "twist_label": "EL CULPABLE NO ES EL FABRICANTE",
+        "twist": "Es la **inteligencia artificial**: los data centers absorben la memoria del mundo.",
+        "fuente": "TRENDFORCE · TOM'S HARDWARE",
+        "punch": "LA IA TIENE LA CULPA.",
+    },
+    {
+        "id": "memory-squeeze-window",
+        "title": "La ventana de compra de hardware se está cerrando",
+        "hook_stat": "DRAM +58-63% y NAND +70-75% adicionales proyectados para Q2 2026",
+        "why": "los cloud providers firmaron contratos de largo plazo que aseguran su suministro — el consumidor paga el ajuste",
+        "insight": "TrendForce reporta que los CSPs (AWS, Google, Microsoft) blindaron su memoria vía acuerdos multianuales. Resultado: la oferta para consumo se reduce y los precios retail de notebooks suben todo el año. Si tu operación depende de hardware propio, comprar antes del próximo ajuste trimestral es decisión financiera, no técnica.",
+        "cta": "¿Tu empresa planea renovar equipos? El timing importa más que el modelo — hablemos",
+        "niches": ["AI Economics", "Hardware", "Strategy"],
+        "visual_label": "GUERRA POR LA MEMORIA",
+        "visual_headline": "La **memoria** del mundo ya tiene dueño.",
+        "twist_label": "QUIÉN GANA REALMENTE",
+        "twist": "Los **cloud providers** ya aseguraron su memoria. El ajuste lo pagas tú.",
+        "fuente": "TRENDFORCE · BLOOMBERG",
+        "punch": "COMPRA ANTES DEL PRÓXIMO AJUSTE.",
     },
     {
         "id": "prompt-caching",
@@ -189,6 +220,7 @@ def main():
     parser.add_argument("--preview", action="store_true", help="Solo muestra, no publica")
     parser.add_argument("--use-claude", action="store_true", help="Usa Claude API para mejorar")
     parser.add_argument("--json", action="store_true", help="Salida JSON pura (para n8n)")
+    parser.add_argument("--visual", action="store_true", help="Genera además la tarjeta visual IG (HTML 1080x1350)")
     args = parser.parse_args()
 
     insight = get_insight_of_day()
@@ -204,13 +236,21 @@ def main():
             content = format_for_platform(insight, platform)
         results[platform] = content
 
+    visual_file = None
+    if args.visual:
+        from visual_generator import generate_visual_html
+        visual_file = f"/tmp/venbrax-visual-{insight['id']}-{datetime.utcnow().strftime('%Y%m%d')}.html"
+        with open(visual_file, "w", encoding="utf-8") as f:
+            f.write(generate_visual_html(insight))
+
     if args.json:
         # Salida JSON pura por stdout — n8n la parsea con JSON.parse()
         print(json.dumps({
             "timestamp": ts,
             "insight_id": insight["id"],
             "insight_title": insight["title"],
-            "posts": results
+            "posts": results,
+            "visual_file": visual_file
         }, ensure_ascii=False))
         return results
 
@@ -221,6 +261,10 @@ def main():
         print(f"CHARS: {len(content)}/{PLATFORMS[platform]['max_chars']}")
         print(f"{'='*60}")
         print(content)
+
+    if visual_file:
+        print(f"\n[VISUAL] Tarjeta IG generada: {visual_file}")
+        print(f"[VISUAL] Render PNG: chromium --headless --screenshot=card.png --window-size=1080,1350 {visual_file}")
 
     if not args.preview:
         output_file = f"/tmp/venbrax-content-{datetime.utcnow().strftime('%Y%m%d-%H%M')}.json"

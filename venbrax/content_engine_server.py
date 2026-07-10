@@ -6,6 +6,8 @@ Solo librería estándar — cero dependencias externas.
 GET /generate                    -> genera las 5 plataformas
 GET /generate?platform=linkedin  -> genera solo una
 GET /generate?use_claude=true    -> usa Claude Opus para redactar
+GET /visual                      -> tarjeta IG HTML 1080x1350 del insight del día
+GET /visual?insight_id=...       -> tarjeta de un insight específico
 """
 import json
 import os
@@ -14,7 +16,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from content_engine import get_insight_of_day, format_for_platform, generate_with_claude, PLATFORMS
+from content_engine import get_insight_of_day, format_for_platform, generate_with_claude, PLATFORMS, INSIGHTS_POOL
+from visual_generator import generate_visual_html
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -23,6 +26,22 @@ class Handler(BaseHTTPRequestHandler):
 
         if parsed.path == "/health":
             self._json(200, {"status": "ok"})
+            return
+
+        if parsed.path == "/visual":
+            params = parse_qs(parsed.query)
+            insight_id = params.get("insight_id", [None])[0]
+            if insight_id:
+                matches = [i for i in INSIGHTS_POOL if i["id"] == insight_id]
+                if not matches:
+                    self._json(404, {"error": f"insight '{insight_id}' no existe",
+                                     "disponibles": [i["id"] for i in INSIGHTS_POOL]})
+                    return
+                insight = matches[0]
+            else:
+                insight = get_insight_of_day()
+            handle = params.get("handle", ["@venbrax"])[0]
+            self._html(200, generate_visual_html(insight, handle=handle))
             return
 
         if parsed.path != "/generate":
@@ -53,6 +72,14 @@ class Handler(BaseHTTPRequestHandler):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _html(self, status, html):
+        body = html.encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
