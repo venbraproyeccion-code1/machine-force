@@ -14,6 +14,7 @@ git clone --depth 1 --quiet https://github.com/venbraproyeccion-code1/machine-fo
 mkdir -p /opt/venbrax
 cp /tmp/mf-sync/venbrax/content_engine.py /opt/venbrax/content_engine.py
 cp /tmp/mf-sync/venbrax/content_engine_server.py /opt/venbrax/content_engine_server.py
+cp /tmp/mf-sync/venbrax/visual_generator.py /opt/venbrax/visual_generator.py
 
 PUBLIC_IP=$(curl -s ifconfig.me)
 

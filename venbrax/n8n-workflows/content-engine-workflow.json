@@ -63,6 +63,46 @@
           "name": "Telegram VenBraTech Bot"
         }
       }
+    },
+    {
+      "parameters": {
+        "url": "http://content-engine:8001/visual",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "visual",
+      "name": "Genera Tarjeta Visual (API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 500]
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "binaryData": true,
+        "binaryPropertyName": "data",
+        "additionalFields": {
+          "caption": "🖼 Tarjeta IG del día — abre el HTML en un navegador y captura a 1080x1350 (o renderiza: chromium --headless --screenshot=card.png --window-size=1080,1350 archivo.html)"
+        }
+      },
+      "id": "deliver-visual",
+      "name": "Entrega Tarjeta (Telegram)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [900, 500],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-venbratech",
+          "name": "Telegram VenBraTech Bot"
+        }
+      }
     }
   ],
   "connections": {
@@ -70,15 +110,21 @@
       "main": [[{"node": "Genera Contenido (API)", "type": "main", "index": 0}]]
     },
     "Genera Contenido (API)": {
-      "main": [[{"node": "1 Item por Plataforma", "type": "main", "index": 0}]]
+      "main": [[
+        {"node": "1 Item por Plataforma", "type": "main", "index": 0},
+        {"node": "Genera Tarjeta Visual (API)", "type": "main", "index": 0}
+      ]]
     },
     "1 Item por Plataforma": {
       "main": [[{"node": "Entrega vía Telegram", "type": "main", "index": 0}]]
+    },
+    "Genera Tarjeta Visual (API)": {
+      "main": [[{"node": "Entrega Tarjeta (Telegram)", "type": "main", "index": 0}]]
     }
   },
   "settings": {
     "timezone": "America/Caracas",
     "executionOrder": "v1"
   },
-  "_venbrax_notes": "v3 — usa HTTP Request en vez de Execute Command (nodo desactivado por seguridad en n8n moderno). El content_engine_server.py corre como servicio Docker separado 'content-engine' en la misma red interna que n8n. 4 nodos, todos productivos. Requiere: docker-compose.yml actualizado con el servicio content-engine (ver update-docker-compose.sh), credencial Telegram Bot configurada, TELEGRAM_CHAT_ID como variable de n8n."
+  "_venbrax_notes": "v4 — agrega rama visual: GET /visual descarga la tarjeta IG 1080x1350 (HTML autocontenido) y la entrega por Telegram como documento junto al copy. La e2-micro no puede correr Chromium, por eso el render a PNG se hace en el teléfono/laptop al recibirla (abrir y capturar) o con chromium headless donde esté disponible. Requiere además que update-docker-compose.sh haya copiado visual_generator.py a /opt/venbrax."
 }
