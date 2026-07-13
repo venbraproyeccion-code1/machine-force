@@ -98,6 +98,7 @@ def generate_visual_html(insight, handle="@venbrax", fecha=None):
     font-family: "SF Mono", "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
     color: #e8f0e8;
     position: relative;
+    display: flex; flex-direction: column;
   }}
   .rain {{
     position: absolute;
@@ -106,7 +107,7 @@ def generate_visual_html(insight, handle="@venbrax", fecha=None):
     z-index: 0;
     user-select: none;
   }}
-  .card {{ position: relative; z-index: 1; padding: 0 64px; }}
+  .card {{ position: relative; z-index: 1; padding: 0 64px; flex: 1; }}
   .titlebar {{
     display: flex; align-items: center; gap: 14px;
     padding: 28px 64px; font-size: 22px; color: #4caf6d;
@@ -145,7 +146,7 @@ def generate_visual_html(insight, handle="@venbrax", fecha=None):
     background: rgba(20,8,6,0.7);
   }}
   .punch {{
-    position: absolute; left: 0; right: 0; bottom: 210px;
+    position: relative; z-index: 1; margin-top: auto;
     text-align: center;
     font-family: "Helvetica Neue", Arial, sans-serif;
     font-size: 58px; font-weight: 800; letter-spacing: 1px;
@@ -155,7 +156,7 @@ def generate_visual_html(insight, handle="@venbrax", fecha=None):
     color: #57d977; font-weight: 400; margin-top: 18px;
     font-family: "SF Mono", Menlo, Consolas, monospace; }}
   .brand {{
-    position: absolute; left: 0; right: 0; bottom: 100px;
+    position: relative; z-index: 1; margin: 36px 0 80px;
     display: flex; align-items: center; justify-content: center; gap: 18px;
     font-size: 30px; font-weight: 700; color: #e8f0e8;
   }}

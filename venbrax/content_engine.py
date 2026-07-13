@@ -120,7 +120,7 @@ Si estás construyendo con {', '.join(insight['niches'][:2])}, este insight camb
 
 {insight['cta']}
 
-#{'  #'.join(insight['niches'][:cfg['hashtags']])} #VenBraX #AIEngineering"""
+#{' #'.join([n.replace(' ', '') for n in insight['niches'][:cfg['hashtags']]])} #VenBraX #AIEngineering"""
 
     elif style == "punchy":  # Twitter/X
         hook = insight['hook_stat'][:100]
@@ -130,7 +130,7 @@ Aquí el por qué: {insight['why'][:100]}
 
 {insight['cta'][:80]}
 
-#{' #'.join(insight['niches'][:cfg['hashtags']])}"""
+#{' #'.join([n.replace(' ', '') for n in insight['niches'][:cfg['hashtags']]])}"""
 
     elif style == "visual_hook":  # Instagram
         content = f"""⚡ {insight['hook_stat']}
