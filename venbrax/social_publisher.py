@@ -26,8 +26,12 @@ Storage). El caption sale del content engine; la imagen de la tarjeta
 del visual_generator subida al bucket.
 """
 import argparse
+import base64
+import hashlib
+import hmac
 import json
 import os
+import time
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -102,15 +106,51 @@ def publish_linkedin(text, author_urn=None, token=None, dry_run=False):
     })
 
 
+
+def _twitter_oauth1(url, ck, cs, tk, ts_):
+    """OAuth 1.0a header para Twitter API v2 (stdlib)."""
+    import time as _t
+    nonce = base64.b64encode(os.urandom(24)).decode().translate(str.maketrans("+/=", "xyz"))
+    stamp = str(int(_t.time()))
+    p = {"oauth_consumer_key": ck, "oauth_nonce": nonce,
+         "oauth_signature_method": "HMAC-SHA1", "oauth_timestamp": stamp,
+         "oauth_token": tk, "oauth_version": "1.0"}
+    enc = lambda s: urllib.parse.quote(str(s), safe="")
+    base = enc("POST") + "&" + enc(url) + "&" + enc(
+        "&".join(f"{enc(k)}={enc(v)}" for k, v in sorted(p.items())))
+    sig = base64.b64encode(
+        hmac.new(f"{enc(cs)}&{enc(ts_)}".encode(), base.encode(), hashlib.sha1).digest()
+    ).decode()
+    p["oauth_signature"] = sig
+    return "OAuth " + ", ".join(f'{enc(k)}="{enc(v)}"' for k, v in sorted(p.items()))
+
+
+def publish_twitter(text, dry_run=False):
+    """Publica un tweet via Twitter API v2 con OAuth 1.0a."""
+    if dry_run:
+        return {"dry_run": True, "platform": "twitter", "chars": len(text)}
+    url = "https://api.twitter.com/2/tweets"
+    auth = _twitter_oauth1(
+        url,
+        os.environ["TWITTER_API_KEY"],
+        os.environ["TWITTER_API_SECRET"],
+        os.environ["TWITTER_ACCESS_TOKEN"],
+        os.environ["TWITTER_ACCESS_TOKEN_SECRET"],
+    )
+    return _request(url, json.dumps({"text": text[:280]}).encode(),
+                    {"Authorization": auth, "Content-Type": "application/json"})
+
+
 PUBLISHERS = {
     "facebook": lambda content, args: publish_facebook(content, dry_run=args.dry_run),
     "instagram": lambda content, args: publish_instagram(
         content, args.image_url or os.environ.get("IG_IMAGE_URL", ""), dry_run=args.dry_run),
     "linkedin": lambda content, args: publish_linkedin(content, dry_run=args.dry_run),
+    "twitter": lambda content, args: publish_twitter(content, dry_run=args.dry_run),
 }
 
 # plataforma del publisher → estilo del content engine
-CONTENT_PLATFORM = {"facebook": "linkedin", "instagram": "instagram", "linkedin": "linkedin"}
+CONTENT_PLATFORM = {"facebook": "linkedin", "instagram": "instagram", "linkedin": "linkedin", "twitter": "twitter"}
 
 
 def main():
@@ -122,13 +162,14 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Muestra sin publicar")
     parser.add_argument("--image-url", help="URL pública de la imagen (Instagram)")
     parser.add_argument("--text", help="Texto manual (default: insight del día)")
+    parser.add_argument("--slot", type=int, default=0, help="Slot del día 0-4 (múltiples posts/día)")
     args = parser.parse_args()
 
     if not args.platform and not args.all:
         parser.error("indica --platform o --all")
     platforms = list(PUBLISHERS.keys()) if args.all else [args.platform]
 
-    insight = get_insight_of_day()
+    insight = get_insight_of_day(slot=args.slot)
     for platform in platforms:
         content = args.text or format_for_platform(insight, CONTENT_PLATFORM[platform])
         try:
