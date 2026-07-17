@@ -56,6 +56,15 @@ RETRY_SETTINGS = {"retryOnFail": True, "maxTries": 3, "waitBetweenTries": 5000}
 HTTP_TIMEOUT_MS = 30000
 SENTINEL_NAME = "Error Sentinel"
 
+# La API pública de n8n valida el objeto "settings" contra un esquema estricto
+# en PUT /workflows/{id}: si el workflow trae claves fuera de esta lista
+# (p.ej. "callerPolicy" de versiones viejas) devuelve HTTP 400. Filtramos.
+ALLOWED_SETTINGS_KEYS = {
+    "saveExecutionProgress", "saveManualExecutions", "saveDataErrorExecution",
+    "saveDataSuccessExecution", "executionTimeout", "errorWorkflow",
+    "timezone", "executionOrder",
+}
+
 
 class N8nClient:
     """Cliente mínimo de la API de n8n (API key o basic auth)."""
@@ -170,6 +179,10 @@ def harden_all(client: N8nClient, dry_run: bool) -> dict:
                 body = {k: patched[k] for k in
                         ("name", "nodes", "connections", "settings")
                         if k in patched}
+                # sanear settings: la API rechaza claves fuera del esquema
+                if isinstance(body.get("settings"), dict):
+                    body["settings"] = {k: v for k, v in body["settings"].items()
+                                        if k in ALLOWED_SETTINGS_KEYS}
                 client.put(f"/api/v1/workflows/{wid}", body)
                 print(f"[FIX] {wname}: " + "; ".join(changes))
             report["patched"].append({"workflow": wname, "changes": changes})
