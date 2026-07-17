@@ -5,9 +5,18 @@
       "parameters": {
         "rule": {
           "interval": [
-            {"field": "cronExpression", "expression": "0 9 * * *"},
-            {"field": "cronExpression", "expression": "0 14 * * *"},
-            {"field": "cronExpression", "expression": "0 19 * * *"}
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 14 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 19 * * *"
+            }
           ]
         }
       },
@@ -15,7 +24,10 @@
       "name": "Horario 3 veces al día",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [240, 300]
+      "position": [
+        240,
+        300
+      ]
     },
     {
       "parameters": {
@@ -23,16 +35,27 @@
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
-            {"name": "use_claude", "value": "true"}
+            {
+              "name": "use_claude",
+              "value": "true"
+            }
           ]
         },
-        "options": {}
+        "options": {
+          "timeout": 30000
+        }
       },
       "id": "generate",
       "name": "Genera Contenido (API)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [460, 300]
+      "position": [
+        460,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -42,7 +65,10 @@
       "name": "1 Item por Plataforma",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [680, 300]
+      "position": [
+        680,
+        300
+      ]
     },
     {
       "parameters": {
@@ -56,13 +82,19 @@
       "name": "Entrega vía Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [900, 300],
+      "position": [
+        900,
+        300
+      ],
       "credentials": {
         "telegramApi": {
           "id": "telegram-venbratech",
           "name": "Telegram VenBraTech Bot"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -73,14 +105,21 @@
               "responseFormat": "file",
               "outputPropertyName": "data"
             }
-          }
+          },
+          "timeout": 30000
         }
       },
       "id": "visual",
       "name": "Genera Tarjeta Visual (API)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 500]
+      "position": [
+        680,
+        500
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -96,30 +135,70 @@
       "name": "Entrega Tarjeta (Telegram)",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [900, 500],
+      "position": [
+        900,
+        500
+      ],
       "credentials": {
         "telegramApi": {
           "id": "telegram-venbratech",
           "name": "Telegram VenBraTech Bot"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     }
   ],
   "connections": {
     "Horario 3 veces al día": {
-      "main": [[{"node": "Genera Contenido (API)", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Genera Contenido (API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Genera Contenido (API)": {
-      "main": [[
-        {"node": "1 Item por Plataforma", "type": "main", "index": 0},
-        {"node": "Genera Tarjeta Visual (API)", "type": "main", "index": 0}
-      ]]
+      "main": [
+        [
+          {
+            "node": "1 Item por Plataforma",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Genera Tarjeta Visual (API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "1 Item por Plataforma": {
-      "main": [[{"node": "Entrega vía Telegram", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Entrega vía Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Genera Tarjeta Visual (API)": {
-      "main": [[{"node": "Entrega Tarjeta (Telegram)", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Entrega Tarjeta (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
