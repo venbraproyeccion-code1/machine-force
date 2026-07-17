@@ -33,6 +33,15 @@ ufw --force enable
 mkdir -p /opt/n8n
 PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip -H "Metadata-Flavor: Google")
 
+# Password: usar N8N_PASSWORD del entorno (o de metadata) o generar aleatorio.
+# NUNCA hardcodear credenciales aqui (este script vive en git).
+N8N_PASSWORD="${N8N_PASSWORD:-$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)}"
+cat > /opt/n8n/.env <<ENVEOF
+N8N_BASIC_AUTH_USER=admin
+N8N_BASIC_AUTH_PASSWORD=$N8N_PASSWORD
+ENVEOF
+chmod 600 /opt/n8n/.env
+
 cat > /opt/n8n/docker-compose.yml <<DCEOF
 version: '3.8'
 services:
@@ -45,8 +54,8 @@ services:
       - n8n_data:/home/node/.n8n
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=VenBraTech2025!
+      - N8N_BASIC_AUTH_USER=\${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=\${N8N_BASIC_AUTH_PASSWORD}
       - WEBHOOK_URL=http://${PUBLIC_IP}:5678
       - GENERIC_TIMEZONE=America/Caracas
       - N8N_LOG_LEVEL=info
@@ -76,7 +85,7 @@ if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
     -H "Content-Type: application/json" \
     -d "{
       \"chat_id\": \"${TELEGRAM_CHAT_ID}\",
-      \"text\": \"✅ <b>n8n LISTO en Google Cloud</b>\n\n🖥 venbratech-n8n (e2-micro)\n🌐 http://${PUBLIC_IP}:5678\n\n👤 admin / VenBraTech2025!\n\n⚡ Ecosistema VenBraX activo\",
+      \"text\": \"✅ <b>n8n LISTO en Google Cloud</b>\n\n🖥 venbratech-n8n (e2-micro)\n🌐 http://${PUBLIC_IP}:5678\n\n👤 Credenciales: ver /opt/n8n/.env en la VM\n\n⚡ Ecosistema VenBraX activo\",
       \"parse_mode\": \"HTML\"
     }"
 fi
