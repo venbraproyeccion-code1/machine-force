@@ -19,6 +19,16 @@ systemctl start docker
 mkdir -p /opt/n8n
 PUBLIC_IP=$(curl -s ifconfig.me)
 
+# Password: usar N8N_PASSWORD del entorno o generar uno aleatorio.
+# NUNCA hardcodear credenciales en este script (vive en git).
+N8N_PASSWORD="${N8N_PASSWORD:-$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)}"
+cat > /opt/n8n/.env <<ENVEOF
+N8N_BASIC_AUTH_USER=admin
+N8N_BASIC_AUTH_PASSWORD=$N8N_PASSWORD
+ENVEOF
+chmod 600 /opt/n8n/.env
+
+# docker compose interpola automaticamente las variables de /opt/n8n/.env
 cat > /opt/n8n/docker-compose.yml <<DCEOF
 version: '3.8'
 services:
@@ -31,8 +41,8 @@ services:
       - n8n_data:/home/node/.n8n
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=VenBraTech2025!
+      - N8N_BASIC_AUTH_USER=\${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=\${N8N_BASIC_AUTH_PASSWORD}
       - WEBHOOK_URL=http://$PUBLIC_IP:5678
       - GENERIC_TIMEZONE=America/Caracas
 volumes:
@@ -55,5 +65,5 @@ fi
 echo ""
 echo "=================================================="
 echo "  n8n LISTO: http://$PUBLIC_IP:5678"
-echo "  Usuario: admin | Password: VenBraTech2025!"
+echo "  Usuario: admin | Password: ver /opt/n8n/.env (chmod 600)"
 echo "=================================================="

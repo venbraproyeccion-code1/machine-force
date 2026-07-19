@@ -20,9 +20,17 @@ cp /tmp/mf-sync/venbrax/social_publisher.py /opt/venbrax/social_publisher.py
 PUBLIC_IP=$(curl -s ifconfig.me)
 
 # El archivo .env NUNCA se versiona en git — vive solo en la VM y
-# guarda secretos como ANTHROPIC_API_KEY. Se crea vacio si no existe
-# para que el "env_file" de abajo no falle en la primera instalacion.
+# guarda secretos como ANTHROPIC_API_KEY y N8N_BASIC_AUTH_PASSWORD.
+# Se crea vacio si no existe para que el "env_file" no falle.
 touch /opt/n8n/.env
+chmod 600 /opt/n8n/.env
+
+# Garantizar que el password exista en .env (generar si falta; nunca en git)
+if ! grep -q '^N8N_BASIC_AUTH_PASSWORD=' /opt/n8n/.env; then
+  echo "N8N_BASIC_AUTH_USER=admin" >> /opt/n8n/.env
+  echo "N8N_BASIC_AUTH_PASSWORD=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)" >> /opt/n8n/.env
+  echo "[INFO] Password nuevo generado en /opt/n8n/.env"
+fi
 
 cat > /opt/n8n/docker-compose.yml <<DCEOF
 version: '3.8'
@@ -34,10 +42,10 @@ services:
       - "5678:5678"
     volumes:
       - n8n_data:/home/node/.n8n
+    env_file:
+      - /opt/n8n/.env
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=VenBraTech2025!
       - WEBHOOK_URL=http://${PUBLIC_IP}:5678
       - GENERIC_TIMEZONE=America/Caracas
       - N8N_SECURE_COOKIE=false

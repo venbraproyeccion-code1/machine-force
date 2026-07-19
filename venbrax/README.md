@@ -18,9 +18,9 @@ venbrax/
 
 1. Crear VM e2-micro en us-central1 (Always Free)
 2. En **Avanzado → Secuencia de comandos de inicio**, pegar el contenido de `gcp-startup.sh`
-3. Firewall: permitir HTTP, HTTPS, puerto 5678
+3. Firewall: permitir puerto 5678 SOLO desde tu IP (no 0.0.0.0/0)
 4. n8n disponible en `http://IP_PUBLICA:5678`
-5. Login: `admin` / `VenBraTech2025!`
+5. Login: `admin` / password autogenerado en `/opt/n8n/.env` (SSH a la VM: `sudo cat /opt/n8n/.env`)
 
 ## Content Engine
 
