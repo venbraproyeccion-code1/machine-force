@@ -86,13 +86,13 @@ When the ecosystem is blocked: identify the single bottleneck. Current: VM creat
 When asked for links: always provide direct links:
 - Google Cloud Console: https://console.cloud.google.com/compute/instances?project=venbrax
 - GitHub repos: https://github.com/venbraproyeccion-code1
-- n8n: http://162.222.183.89:5678 (admin / VenBraTech2025!)
+- n8n: http://162.222.183.89:5678 (credencial: ver GCP Secret Manager, secreto `n8n-admin-credentials`)
 - Firewall rules: https://console.cloud.google.com/networking/firewalls/list?project=venbrax
 
 ## Credentials Map
 
 ```
-n8n admin:   admin / VenBraTech2025!
+n8n admin:   ver GCP Secret Manager, secreto `n8n-admin-credentials` (proyecto venbrax)
 Telegram:    TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (pending setup)
 Anthropic:   ANTHROPIC_API_KEY (pending — needed for Content Engine Claude generation)
 LinkedIn:    OAuth2 (configure in n8n after VM is up)
